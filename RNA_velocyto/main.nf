@@ -13,8 +13,8 @@ params.output_dir = "$work_dir/data"
 process download_data {
 
     cpus 3
-    time '2h'
-    memory '16 GB'
+    time '3h'
+    memory '3 GB'
     executor 'pbs'
 
 
@@ -45,6 +45,7 @@ process run_cell_ranger {
     job_name="${patient_name}_${indices}"
     """
     export PATH=$custom_path
+    rm -rf $patient_name
     cellranger count --id=${job_name} \
         --fastqs=${fastq}/${patient_name} \
         --indices=${indices} --localcores=10 \
@@ -73,6 +74,7 @@ process run_rnavelocyto {
     source ~/.bashrc
     conda activate velocyto
     eval `modulecmd bash load samtools`
+    rm -rf $cell_ranger_output/velocyto
     velocyto run10x -@ 4 --samtools-memory 1000 -m $repeat_msk $cell_ranger_output $ref_gtf > ${patient_name}_${indices}.log
     """
 }
@@ -80,13 +82,5 @@ process run_rnavelocyto {
 workflow {
     indices = Channel.fromPath(params.sample_table).splitCsv()
     patient_name = indices.map { it[0] }.unique { it }
-    /* patient_name | view */
     patient_name | download_data | combine(indices, by: 0) | map { it } | run_cell_ranger | run_rnavelocyto | mix | view
-    /* download_data(params.patient_name)  */
-    /* fastq = download_data.out */
-    /* fastq.view() */
-    /* indices = Channel.from(params.indices.split(',')) */
-    /* fastq.combine(indices).view() */
-    /* fastq.combine(indices).map { it } | run_cell_ranger */
-    /* run_rnavelocyto(run_cell_ranger.out).view() */
 }
