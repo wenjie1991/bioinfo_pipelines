@@ -37,12 +37,13 @@ process run_cell_ranger {
     executor 'pbs'
 
 
-    input: tuple val(patient_name), path(fastq), val(indices)
+    input: tuple val(patient_name), path(fastq), val(version), val(indices)
 
     output: tuple val("$patient_name"), path("${patient_name}_${indices}"), val(indices)
 
     script:
     job_name="${patient_name}_${indices}"
+    if (version == "V1") {
     """
     export PATH=$custom_path
     rm -rf $patient_name
@@ -51,6 +52,16 @@ process run_cell_ranger {
         --indices=${indices} --localcores=10 \
         --localmem=48 --transcriptome=${cellranger_ref}
     """
+    } else {
+    """
+    export PATH=$custom_path
+    rm -rf $patient_name
+    cellranger count --id=${job_name} \
+        --fastqs=${fastq}/${patient_name} \
+        --sample=${indices} --localcores=10 \
+        --localmem=48 --transcriptome=${cellranger_ref}
+    """
+    }
 }
 
 process run_rnavelocyto {
@@ -82,5 +93,7 @@ process run_rnavelocyto {
 workflow {
     indices = Channel.fromPath(params.sample_table).splitCsv()
     patient_name = indices.map { it[0] }.unique { it }
+    // patient_name | view	
+    // patient_name | combine(indices, by: 0) | map { it } | view
     patient_name | download_data | combine(indices, by: 0) | map { it } | run_cell_ranger | run_rnavelocyto | mix | view
 }
