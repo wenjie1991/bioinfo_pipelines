@@ -1,13 +1,19 @@
 nextflow.enable.dsl=2
 
-work_dir = "/data/users/wsun/workdir/rna_velo/"
+// Cell ranger configuration
 cellranger_ref="/bioinfo/local/build/Centos/cellranger/refdata/refdata-cellranger-GRCh38-3.0.0"
 custom_path= "$PATH:/bioinfo/local/build/Centos/cellranger/cellranger-3.1.0"
+
+// RNA velocyto configuration
 repeat_msk="/data/users/wsun/annotation/GRCh38_rmsk.gtf"
 ref_gtf="$cellranger_ref/genes/genes.gtf"
 
+/*  sample_table is a CSV file. It has three columns:
+      1. Patient_name
+      2. 10X Kit version
+      3. Indices id (for V1 Kit) or sample name (for V2 Kit) */
 params.sample_table
-params.output_dir = "$work_dir/data"
+params.output_dir = "/data/users/wsun/workdir/rna_velo/data"
 
 
 process download_data {
