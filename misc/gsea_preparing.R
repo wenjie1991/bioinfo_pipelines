@@ -1,5 +1,10 @@
 library(stringr)
 
+######
+#  README  #
+######
+
+
 ## read expression tables
 d = fread("../data/table.exp/tablecounts_tpm.csv")
 
